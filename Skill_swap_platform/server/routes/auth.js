@@ -1,96 +1,14 @@
-const express = require('express');
+import express from 'express';
+import { protect } from '../middleware/auth.js';
+import { registerValidation, loginValidation, validateInput } from '../middleware/validation.js';
+import { register, login, getProfile, updateProfile, logout } from '../controllers/auth.js';
+
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
-// Register
-router.post('/register', async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+router.post('/register', registerValidation, validateInput, register);
+router.post('/login', loginValidation, validateInput, login);
+router.post('/logout', logout);
+router.get('/profile', protect, getProfile);
+router.put('/profile', protect, updateProfile);
 
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-
-    // Create new user
-    const user = new User({
-      name,
-      email,
-      password
-    });
-
-    await user.save();
-
-    // Create JWT token
-    const payload = {
-      id: user._id,
-      name: user.name,
-      email: user.email
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: '7d'
-    });
-
-    res.json({
-      success: true,
-      token: 'Bearer ' + token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Login
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Find user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Create JWT token
-    const payload = {
-      id: user._id,
-      name: user.name,
-      email: user.email
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: '7d'
-    });
-
-    res.json({
-      success: true,
-      token: 'Bearer ' + token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-module.exports = router;
+export default router;

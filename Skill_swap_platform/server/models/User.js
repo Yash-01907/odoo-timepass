@@ -1,72 +1,161 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-const UserSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: [true, 'Name is required'],
+    trim: true,
+    maxlength: [50, 'Name cannot exceed 50 characters']
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email is required'],
     unique: true,
-    lowercase: true
+    lowercase: true,
+    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
   password: {
     type: String,
-    required: true
+    required: [true, 'Password is required'],
+    minlength: [6, 'Password must be at least 6 characters'],
+    select: false
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
   },
   location: {
     type: String,
-    default: ''
+    trim: true,
+    maxlength: [100, 'Location cannot exceed 100 characters']
+  },
+  profilePhoto: {
+    type: String,
+    default: null
   },
   skillsOffered: [{
-    type: String
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      required: true,
+      maxlength: [500, 'Description cannot exceed 500 characters']
+    },
+    category: {
+      type: String,
+      required: true,
+      enum: ['Technology', 'Design', 'Business', 'Languages', 'Arts', 'Sports', 'Music', 'Other']
+    },
+    experienceLevel: {
+      type: String,
+      required: true,
+      enum: ['Beginner', 'Intermediate', 'Advanced', 'Expert']
+    },
+    isApproved: {
+      type: Boolean,
+      default: true
+    },
+    rejectionReason: String
   }],
   skillsWanted: [{
-    type: String
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      maxlength: [500, 'Description cannot exceed 500 characters']
+    },
+    category: {
+      type: String,
+      required: true,
+      enum: ['Technology', 'Design', 'Business', 'Languages', 'Arts', 'Sports', 'Music', 'Other']
+    },
+    urgency: {
+      type: String,
+      enum: ['Low', 'Medium', 'High'],
+      default: 'Medium'
+    }
   }],
   availability: {
-    type: String,
-    enum: ['Weekends', 'Evenings', 'Mornings', 'Flexible', 'Not Available'],
-    default: 'Flexible'
+    weekdays: {
+      type: Boolean,
+      default: false
+    },
+    weekends: {
+      type: Boolean,
+      default: false
+    },
+    evenings: {
+      type: Boolean,
+      default: false
+    },
+    mornings: {
+      type: Boolean,
+      default: false
+    }
   },
   isPublic: {
     type: Boolean,
     default: true
   },
-  profilePhoto: {
-    type: String,
-    default: ''
+  isBanned: {
+    type: Boolean,
+    default: false
   },
+  banReason: String,
   rating: {
+    average: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
+    },
+    count: {
+      type: Number,
+      default: 0
+    }
+  },
+  completedSwaps: {
     type: Number,
     default: 0
   },
-  totalRatings: {
-    type: Number,
-    default: 0
+  joinedAt: {
+    type: Date,
+    default: Date.now
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true
 });
 
+// Create indexes
+userSchema.index({ 'skillsOffered.name': 'text', 'skillsOffered.description': 'text' });
+userSchema.index({ 'skillsWanted.name': 'text', 'skillsWanted.description': 'text' });
+userSchema.index({ location: 1 });
+userSchema.index({ isPublic: 1, isBanned: 1 });
+
 // Hash password before saving
-UserSchema.pre('save', async function(next) {
+userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Compare password method
-UserSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.comparePassword = async function(password) {
+  return await bcrypt.compare(password, this.password);
 };
 
-module.exports = mongoose.model('User', UserSchema);
+export default mongoose.model('User', userSchema);

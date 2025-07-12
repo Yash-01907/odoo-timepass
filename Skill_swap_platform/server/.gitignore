@@ -1,0 +1,93 @@
+# -------------------
+# Node.js backend
+# -------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.env
+.env.*
+
+
+# -------------------
+# MongoDB data dumps (if any)
+# -------------------
+dump/
+
+
+# -------------------
+# Build output
+# -------------------
+dist/
+build/
+
+
+# -------------------
+# Logs
+# -------------------
+logs/
+*.log
+*.log.*
+log.txt
+debug.log
+
+
+# -------------------
+# System files
+# -------------------
+.DS_Store
+Thumbs.db
+
+
+# -------------------
+# IDE/editor settings
+# -------------------
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+
+# -------------------
+# React (if frontend included)
+# -------------------
+/frontend/node_modules/
+/frontend/.env
+/frontend/.env.*  
+/frontend/build/
+/frontend/dist/
+/frontend/package-lock.json
+/frontend/yarn.lock
+
+
+# -------------------
+# Vite (if used)
+# -------------------
+.vite/
+*.tsbuildinfo
+
+
+# -------------------
+# Optional: Test coverage
+# -------------------
+coverage/
+.nyc_output/
+
+
+# -------------------
+# Optional: Docker
+# -------------------
+*.local
+docker-compose.override.yml
+docker-compose.local.yml
+
+
+# -------------------
+# Misc
+# -------------------
+*.swp
+*.bak
+*.tmp
